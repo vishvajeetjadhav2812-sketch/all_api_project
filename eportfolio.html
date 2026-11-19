@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vishwajeet Jadhav | e-Portfolio</title>
+<!--
+  e-Portfolio - ONE FILE (HTML + CSS + JavaScript, no backend)
+  1. AI Builder          -> section #builder  (template generator, optional Claude API key)
+  2. Database Integration-> browser localStorage (projects, messages, payments, chat logs)
+  3. Payment Gateway     -> Razorpay Checkout (test key) - demo mode if key not set
+  4. WhatsApp API        -> click-to-chat link (wa.me) with the form message
+  5. Chatbot             -> floating chat (rule-based, optional Claude API key)
+
+  HOW TO USE: just open index.html, or push to GitHub and enable GitHub Pages.
+  CONFIG: edit the CONFIG object in the <script> below.
+-->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+  :root{--bg:#0b1220;--card:#162033;--line:#26344d;--tx:#e6edf7;--mut:#8da0bd;--ac:#38bdf8;--ac2:#818cf8}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--tx);line-height:1.6}
+  header{padding:64px 20px 48px;text-align:center;background:linear-gradient(135deg,#0ea5e9 0%,#6366f1 100%)}
+  header h1{margin:0;font-size:clamp(2rem,6vw,3rem)}
+  header p{margin:6px 0 0;opacity:.9}
+  nav{position:sticky;top:0;z-index:5;display:flex;justify-content:center;gap:6px;flex-wrap:wrap;padding:10px;background:#0b1220ee;backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+  nav a{color:var(--tx);text-decoration:none;padding:6px 12px;border-radius:8px;font-weight:600;font-size:.92rem}
+  nav a:hover{background:var(--card);color:var(--ac)}
+  section{max-width:920px;margin:40px auto;padding:0 18px}
+  h2{color:var(--ac);margin:0 0 14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:12px 0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+  input,textarea{width:100%;padding:10px 12px;margin:6px 0;border-radius:10px;border:1px solid var(--line);background:#0b1220;color:var(--tx);font:inherit}
+  input:focus,textarea:focus{outline:2px solid var(--ac);border-color:transparent}
+  button{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#06101f;border:0;padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer;font:inherit;font-weight:700}
+  button.ghost{background:transparent;color:var(--mut);border:1px solid var(--line)}
+  button:hover{filter:brightness(1.1)}
+  a{color:var(--ac)}
+  .out{white-space:pre-wrap;margin-top:10px;color:var(--tx)}
+  .mut{color:var(--mut);font-size:.85rem}
+  table{width:100%;border-collapse:collapse;font-size:.85rem}
+  th,td{border-bottom:1px solid var(--line);padding:6px;text-align:left}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  /* chatbot */
+  #chat{position:fixed;right:16px;bottom:16px;width:min(330px,calc(100vw - 32px));background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 40px #000a;overflow:hidden;z-index:20}
+  #chatHead{padding:12px 14px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--ac),var(--ac2));color:#06101f}
+  #chatBody{display:none}
+  #msgs{height:240px;overflow:auto;padding:10px;font-size:.9rem;display:flex;flex-direction:column;gap:6px}
+  .m{padding:7px 10px;border-radius:10px;max-width:85%}
+  .m.b{background:#0b1220;align-self:flex-start}
+  .m.u{background:var(--ac);color:#06101f;align-self:flex-end}
+  #chatIn{display:flex;border-top:1px solid var(--line)}
+  #chatIn input{margin:0;border:0;border-radius:0}
+  #chatIn button{border-radius:0}
+  footer{text-align:center;color:var(--mut);padding:30px 0 90px;font-size:.85rem}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Vishwajeet Jadhav</h1>
+  <p>Python &bull; Flask &bull; HTML/CSS/JS &bull; Web Developer</p>
+</header>
+
+<nav>
+  <a href="#projects">Projects</a>
+  <a href="#builder">AI Builder</a>
+  <a href="#pay">Payment</a>
+  <a href="#contact">WhatsApp</a>
+  <a href="#data">Database</a>
+</nav>
+
+<!-- PROJECTS (from database) -->
+<section id="projects">
+  <h2>Projects</h2>
+  <div id="projectList" class="grid"></div>
+  <div class="card">
+    <b>Add a project</b>
+    <input id="pTitle" placeholder="Title">
+    <input id="pDesc" placeholder="Description">
+    <input id="pLink" placeholder="GitHub link (https://...)">
+    <button onclick="addProject()">Add</button>
+  </div>
+</section>
+
+<!-- 1. AI BUILDER -->
+<section id="builder">
+  <h2>AI Portfolio Builder</h2>
+  <div class="card">
+    <input id="bName" placeholder="Your name" value="Vishwajeet Jadhav">
+    <input id="bSkills" placeholder="Skills (HTML, CSS, JavaScript, Python...)">
+    <input id="bGoal" placeholder="Career goal (e.g. full-stack developer)">
+    <div class="row">
+      <button onclick="buildAbout()">Generate</button>
+      <button class="ghost" onclick="copyText('bOut')">Copy</button>
+    </div>
+    <div id="bOut" class="out"></div>
+    <p class="mut">Optional: add an Anthropic API key in CONFIG to get real AI output. Without it, a smart template is used.</p>
+  </div>
+</section>
+
+<!-- 3. PAYMENT GATEWAY -->
+<section id="pay">
+  <h2>Payment Gateway (Razorpay)</h2>
+  <div class="card">
+    <input id="payName" placeholder="Your name">
+    <input id="payAmt" type="number" min="1" value="100" placeholder="Amount in INR">
+    <button onclick="pay()">Pay Now</button>
+    <div id="payOut" class="out"></div>
+    <p class="mut">Uses Razorpay test mode. Set your test Key ID in CONFIG. Without a key, a demo payment is recorded.</p>
+  </div>
+</section>
+
+<!-- 4. WHATSAPP -->
+<section id="contact">
+  <h2>Contact via WhatsApp</h2>
+  <div class="card">
+    <input id="cName" placeholder="Your name">
+    <textarea id="cMsg" rows="3" placeholder="Your message"></textarea>
+    <button onclick="sendWhatsApp()">Send on WhatsApp</button>
+    <div id="cOut" class="out"></div>
+  </div>
+</section>
+
+<!-- 2. DATABASE VIEW -->
+<section id="data">
+  <h2>Database (localStorage)</h2>
+  <div class="card">
+    <b>Messages</b><div id="tblMsgs"></div>
+    <b>Payments</b><div id="tblPays"></div>
+    <button class="ghost" onclick="resetDB()">Reset database</button>
+  </div>
+</section>
+
+<footer>&copy; <span id="yr"></span> Vishwajeet Jadhav</footer>
+
+<!-- 5. CHATBOT -->
+<div id="chat">
+  <div id="chatHead" onclick="toggleChat()">Chat with assistant</div>
+  <div id="chatBody">
+    <div id="msgs"><div class="m b">Hi! Ask me about projects, skills, payment or contact.</div></div>
+    <div id="chatIn">
+      <input id="chatText" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendChat()">
+      <button onclick="sendChat()">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== CONFIG ===================== */
+const CONFIG = {
+  OWNER_NAME: "Vishwajeet Jadhav",
+  WHATSAPP_NUMBER: "91XXXXXXXXXX",        // country code + number, no + or spaces
+  RAZORPAY_KEY_ID: "",                      // e.g. "rzp_test_xxxxxxxx" (test key only)
+  ANTHROPIC_API_KEY: "",                    // optional. WARNING: visible to anyone who opens your site
+  CLAUDE_MODEL: "claude-sonnet-4-5"
+};
+
+/* ===================== 2. DATABASE (localStorage) ===================== */
+const DB = {
+  get(t, fallback = []) {
+    try { return JSON.parse(localStorage.getItem("eport_" + t)) ?? fallback; }
+    catch { return fallback; }
+  },
+  set(t, v) { try { localStorage.setItem("eport_" + t, JSON.stringify(v)); } catch {} },
+  add(t, row) {
+    const rows = DB.get(t);
+    row.id = Date.now() + Math.floor(Math.random() * 1000);
+    row.time = new Date().toLocaleString();
+    rows.push(row);
+    DB.set(t, rows);
+    return row;
+  }
+};
+
+if (!localStorage.getItem("eport_projects")) {
+  DB.set("projects", [
+    { id: 1, title: "Web Assignment 1", desc: "HTML/CSS/JS web assignment.", link: "https://github.com/vishvajeetjadhav2812-sketch/web_assignment_1" },
+    { id: 2, title: "Web Assignment 2", desc: "Second web development assignment.", link: "https://github.com/vishvajeetjadhav2812-sketch/web_assignment_2" }
+  ]);
+}
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function renderProjects() {
+  $("projectList").innerHTML = DB.get("projects").map(p => `
+    <div class="card"><b>${esc(p.title)}</b><br>${esc(p.desc)}<br>
+    ${/^https?:\/\//.test(p.link || "") ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">View on GitHub &rarr;</a>` : ""}</div>`).join("");
+}
+
+function addProject() {
+  const title = $("pTitle").value.trim();
+  if (!title) return alert("Enter a title");
+  DB.add("projects", { title, desc: $("pDesc").value.trim(), link: $("pLink").value.trim() });
+  $("pTitle").value = $("pDesc").value = $("pLink").value = "";
+  renderProjects();
+}
+
+function table(rows, cols) {
+  if (!rows.length) return '<p class="mut">No records yet.</p>';
+  return `<div style="overflow-x:auto"><table><tr>${cols.map(c => `<th>${c}</th>`).join("")}</tr>` +
+    rows.slice().reverse().map(r => `<tr>${cols.map(c => `<td>${esc(r[c.toLowerCase()])}</td>`).join("")}</tr>`).join("") +
+    "</table></div>";
+}
+
+function renderData() {
+  $("tblMsgs").innerHTML = table(DB.get("messages"), ["Name", "Message", "Time"]);
+  $("tblPays").innerHTML = table(DB.get("payments"), ["Name", "Amount", "Status", "Time"]);
+}
+
+function resetDB() {
+  if (!confirm("Delete all saved data?")) return;
+  Object.keys(localStorage).filter(k => k.startsWith("eport_")).forEach(k => localStorage.removeItem(k));
+  location.reload();
+}
+
+/* ===================== Claude helper (optional) ===================== */
+async function askClaude(system, user, max = 500) {
+  if (!CONFIG.ANTHROPIC_API_KEY) return null;
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": CONFIG.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({ model: CONFIG.CLAUDE_MODEL, max_tokens: max, system, messages: [{ role: "user", content: user }] })
+    });
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    return d.content.map(b => b.text || "").join("");
+  } catch (e) { console.warn("Claude error", e); return null; }
+}
+
+/* ===================== 1. AI BUILDER ===================== */
+async function buildAbout() {
+  const name = $("bName").value.trim() || CONFIG.OWNER_NAME;
+  const skills = $("bSkills").value.trim() || "web development";
+  const goal = $("bGoal").value.trim() || "to grow as a full-stack developer";
+  $("bOut").textContent = "Generating...";
+
+  let text = await askClaude(
+    "You write short professional first-person portfolio bios. Give a 3-4 line About Me, then 3 project ideas as bullets.",
+    `Name: ${name}\nSkills: ${skills}\nGoal: ${goal}`, 600);
+
+  if (!text) {
+    const list = skills.split(",").map(s => s.trim()).filter(Boolean);
+    const first = list.slice(0, 3).join(", ") || skills;
+    text = `About Me\nHi, I'm ${name}, a developer skilled in ${first}. I enjoy turning ideas into clean, responsive and useful web experiences. My goal is ${goal}.\n\nProject ideas\n- A personal blog with a login system using ${list[0] || "HTML/CSS/JS"}\n- A restaurant ordering app with a live bill and booking form\n- An expense tracker with charts and local storage`;
+  }
+  $("bOut").textContent = text;
+}
+
+function copyText(id) {
+  navigator.clipboard?.writeText($(id).textContent).then(() => alert("Copied!"));
+}
+
+/* ===================== 3. PAYMENT GATEWAY ===================== */
+function pay() {
+  const name = $("payName").value.trim() || "Guest";
+  const amount = parseInt($("payAmt").value, 10);
+  if (!amount || amount < 1) return alert("Enter a valid amount");
+
+  if (!CONFIG.RAZORPAY_KEY_ID || typeof Razorpay === "undefined") {
+    DB.add("payments", { name, amount, status: "paid (demo)" });
+    $("payOut").textContent = `Demo payment of Rs ${amount} recorded. Add your Razorpay test key in CONFIG for the real checkout.`;
+    renderData();
+    return;
+  }
+
+  const rzp = new Razorpay({
+    key: CONFIG.RAZORPAY_KEY_ID,
+    amount: amount * 100,
+    currency: "INR",
+    name: CONFIG.OWNER_NAME,
+    description: "Portfolio support payment",
+    prefill: { name },
+    theme: { color: "#38bdf8" },
+    handler: res => {
+      DB.add("payments", { name, amount, status: "paid (" + res.razorpay_payment_id + ")" });
+      $("payOut").textContent = "Payment successful! ID: " + res.razorpay_payment_id;
+      renderData();
+    }
+  });
+  rzp.on("payment.failed", () => {
+    DB.add("payments", { name, amount, status: "failed" });
+    $("payOut").textContent = "Payment failed. Please try again.";
+    renderData();
+  });
+  rzp.open();
+}
+
+/* ===================== 4. WHATSAPP ===================== */
+function sendWhatsApp() {
+  const name = $("cName").value.trim();
+  const msg = $("cMsg").value.trim();
+  if (!name || !msg) return alert("Enter your name and message");
+  DB.add("messages", { name, message: msg });
+  const text = encodeURIComponent(`Hi ${CONFIG.OWNER_NAME}, I'm ${name}.\n${msg}`);
+  window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${text}`, "_blank", "noopener");
+  $("cOut").textContent = "Opening WhatsApp...";
+  $("cMsg").value = "";
+  renderData();
+}
+
+/* ===================== 5. CHATBOT ===================== */
+const FAQ = [
+  [/hi|hello|hey|namaste/, "Hi! I'm the portfolio assistant. Ask about projects, skills, payment or contact."],
+  [/project|work|assignment/, "Check the Projects section at the top. You can also add new projects there."],
+  [/skill|tech|stack|language/, "HTML, CSS, JavaScript, Python and Flask."],
+  [/pay|money|razorpay|support/, "Go to the Payment section, enter an amount and click Pay Now."],
+  [/contact|whatsapp|reach|hire/, "Use the WhatsApp section. Your message opens directly in WhatsApp."],
+  [/ai|builder|bio|about/, "Try the AI Builder section to generate an About Me and project ideas."]
+];
+
+function toggleChat() {
+  const b = $("chatBody");
+  b.style.display = b.style.display === "block" ? "none" : "block";
+}
+
+function addMsg(text, who) {
+  const d = document.createElement("div");
+  d.className = "m " + who;
+  d.textContent = text;
+  $("msgs").appendChild(d);
+  $("msgs").scrollTop = $("msgs").scrollHeight;
+}
+
+async function sendChat() {
+  const t = $("chatText").value.trim();
+  if (!t) return;
+  $("chatText").value = "";
+  addMsg(t, "u");
+
+  let reply = await askClaude(
+    `You are the friendly assistant on ${CONFIG.OWNER_NAME}'s portfolio. He is a college student skilled in HTML, CSS, JavaScript, Python and Flask. Answer in max 3 sentences, in the user's language.`,
+    t, 300);
+
+  if (!reply) {
+    const hit = FAQ.find(([re]) => re.test(t.toLowerCase()));
+    reply = hit ? hit[1] : "I didn't get that. Try asking about projects, skills, payment or contact.";
+  }
+  addMsg(reply, "b");
+  DB.add("chats", { user: t, bot: reply });
+}
+
+/* ===================== INIT ===================== */
+$("yr").textContent = new Date().getFullYear();
+renderProjects();
+renderData();
+</script>
+</body>
+</html>
